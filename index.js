@@ -40,24 +40,44 @@ function createHeader(size) {
   return header;
 };
 
-function createShip(grid, size, length) {
+function checkShip(gridArr, size, length) {
+  let temp = [];
   let count = 0;
-  let temp = grid;
-  let x = Math.floor(Math.random() * size);
-  let y = Math.floor(Math.random() * size);
-  let valx = Math.floor(Math.random() * 2);
-  let valy = 1 - valx;
+  let x = Math.floor(Math.random() * (size - length + 1));
+  let y = Math.floor(Math.random() * (size - length + 1));
+  let valX = Math.floor(Math.random() * 2);
+  let valY = 1 - valX;
   while(count < length) {
-    if (temp[x][y] == 1 || x > 9 || y > 9) {
-      createShip(grid, size, length);
+    if (gridArr.includes("[x,y]")) {
+      return [];
     } else {
-      temp[x][y] = 1;
+      temp.push([x,y])
     }
-    x = x + valx;
-    y = y + valy;
+    x += valX;
+    y += valY;
     count++;
   }
   return temp;
+}
+
+function setShip(grid, arr, shipNum) {
+  arr.forEach(element => {
+    let x = element[0];
+    let y = element[1];
+    grid[x][y] = shipNum;
+  })
+  return grid;
+}
+
+function createShip(grid, gridArr, size, length, shipNum) {
+  let temp = [];
+  let ship = checkShip(gridArr, size, length);
+  while(ship == []) {
+    ship = checkShip(gridArr, size, length);
+  }
+  ship.forEach(element => gridArr.push(element));
+  ship.forEach(element => temp.push(element));
+  setShip(grid, temp, shipNum);
 }
 
 function attack() {
@@ -68,45 +88,60 @@ function attack() {
   return att;
 }
 
-function attackShip(grid, attack, shipNum) {
+function attackShip(grid, attack, numberOfShips) {
   let x = alphabet.findIndex(char => char == attack[0]);
   let y = attack.slice(1) - 1;
   if (grid[x][y] == 'O' || grid[x][y] == 'X') {
     console.log('You have already picked this location. Miss!')
-  } else if (grid[x][y] == 1) {
-    console.log(`Hit. You have sunk a battleship. ${shipNum - 1} ship remaining.`)
-    return grid[x][y] = 'O';
-  } else {
+  } else if (grid[x][y] == '-') {
     console.log('You have missed!')
     return grid[x][y] = 'X';
+  } else {
+    let temp = grid[x][y];
+    grid[x][y] = 'O';
+    const trueFalse = grid.forEach(element => {
+      element.find(elem => {
+        elem == temp;
+      })
+    });
+    if (trueFalse == temp) {
+      console.log(`Hit! remaining ships: ${numberOfShips}`)
+    } else {
+      console.log(`Hit. You have sunk a battleship. Remaining ships: ${numberOfShips - 1}`)
+    }
+    return grid[x][y] = 'O';
   }
 }
 
 function numberOfShips(grid) {
-  let count = 0;
-  for (let x = 0; x < grid.length; x++) {
-    for (let y = 0; y < grid[x].length; y++) {
-      if (grid[x][y] == 1) {
-        count++;
-      }
+  let temp = [];
+  grid.forEach(elem => elem.forEach(elem => {
+    if (Number.isInteger(elem) && !temp.includes(elem)) {
+      temp.push(elem);
     }
-  }
-  return count;
+  }))
+  return temp.length;
 }
 
 function checkShipStatus(grid) {
-  return grid
-  .map(ship => ship.find(ship => ship == 1) == 1)
-  .find(ship => ship == true);
+  grid.forEach(elem => elem.forEach(elem => {
+    if (Number.isInteger(elem) == true) {
+      return true;
+    };
+  }))
 }
 
-function gameStart(grid) {
-  grid = createGrid(10);
-  createShip(grid, 10, 2);
-  createShip(grid, 10, 3);
-  createShip(grid, 10, 3);
-  createShip(grid, 10, 4);
-  createShip(grid, 10, 5);
+function gameStart(grid, size) {
+  grid = createGrid(size);
+  let gridArr = [];
+  createShip(grid, gridArr, size, 2, 1);
+  createShip(grid, gridArr, size, 3, 2);
+  createShip(grid, gridArr, size, 3, 3);
+  createShip(grid, gridArr, size, 4, 4);
+  createShip(grid, gridArr, size, 5, 5);
+  printGrid(grid);
+  console.log(grid);
+  console.log(gridArr);
   while (checkShipStatus(grid)) {
     const poke = attack();
     attackShip(grid, poke, numberOfShips(grid));
@@ -116,7 +151,7 @@ function gameStart(grid) {
 
 rs.keyIn("Press any key to start the game.");
 let grid;
-gameStart(grid);
+gameStart(grid, 10);
 let restart = rs.keyInYN('You have destroyed all battleships. Would you like to play again? Y/N')
 
 while (restart) {
