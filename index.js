@@ -16,26 +16,35 @@ function createGrid(size) {
 
 function printGrid(grid) {
   const headers = createHeader(grid.length);
+  console.log(' ');
   console.log(headers);
-  for (let i = 0; i < grid.length; i++) {
-    let rowStr = alphabet[i] + ' ';
-    for (let cell of grid[i]) {
-      if (cell == 'O') {
-        rowStr += 'O ';
-      } else if (cell == 'X') {
-        rowStr += 'X ';
-      } else {
-        rowStr += '- ';
+  console.log('  -----------------------------------------');
+  for (let i = 0; i < (grid.length * 2); i++) {
+    let temp = (i / 2);
+    let rowStr;
+    if (i % 2 == 0) {
+      rowStr = alphabet[temp] + ' |';
+      for (let cell of grid[temp]) {
+        if (cell == 'O') {
+          rowStr += ' O |';
+        } else if (cell == 'X') {
+          rowStr += ' X |';
+        } else {
+          rowStr += '   |';
+        }
       }
+    } else {
+      rowStr = '  -----------------------------------------';
     }
     console.log(rowStr);
   }
+  console.log(' ');
 }
 
 function createHeader(size) {
-  let header = '  ';
+  let header = '    ';
   for (let i = 1; i <= size; i++) {
-    header += i + ' ';
+    header += i + '   ';
   }
   return header;
 };
@@ -48,11 +57,12 @@ function checkShip(gridArr, size, length) {
   let valX = Math.floor(Math.random() * 2);
   let valY = 1 - valX;
   while(count < length) {
-    if (gridArr.includes("[x,y]")) {
-      return [];
-    } else {
-      temp.push([x,y])
+    for(let i = 0; i < gridArr.length; i++) {
+      if (gridArr[i][0] == x && gridArr[i][1] == y) {
+        return [];
+      }
     }
+    temp.push([x,y]);
     x += valX;
     y += valY;
     count++;
@@ -71,12 +81,12 @@ function setShip(grid, arr, shipNum) {
 
 function createShip(grid, gridArr, size, length, shipNum) {
   let temp = [];
-  let ship = checkShip(gridArr, size, length);
-  while(ship == []) {
-    ship = checkShip(gridArr, size, length);
+  while(temp.length == 0) {
+    temp = checkShip(gridArr, size, length);
   }
-  ship.forEach(element => gridArr.push(element));
-  ship.forEach(element => temp.push(element));
+  temp.forEach(elem => {
+    gridArr.push(elem);
+  })
   setShip(grid, temp, shipNum);
 }
 
@@ -88,26 +98,21 @@ function attack() {
   return att;
 }
 
-function attackShip(grid, attack, numberOfShips) {
+function attackShip(grid, attack, shipNum) {
   let x = alphabet.findIndex(char => char == attack[0]);
   let y = attack.slice(1) - 1;
   if (grid[x][y] == 'O' || grid[x][y] == 'X') {
     console.log('You have already picked this location. Miss!')
   } else if (grid[x][y] == '-') {
-    console.log('You have missed!')
+    console.log(`You have missed! remaining ships: ${shipNum}`)
     return grid[x][y] = 'X';
   } else {
-    let temp = grid[x][y];
     grid[x][y] = 'O';
-    const trueFalse = grid.forEach(element => {
-      element.find(elem => {
-        elem == temp;
-      })
-    });
-    if (trueFalse == temp) {
-      console.log(`Hit! remaining ships: ${numberOfShips}`)
+    currentShips = numberOfShips(grid);
+    if (shipNum == currentShips) {
+      console.log(`Hit! remaining ships: ${shipNum}`)
     } else {
-      console.log(`Hit. You have sunk a battleship. Remaining ships: ${numberOfShips - 1}`)
+      console.log(`Hit. You have sunk a battleship. Remaining ships: ${currentShips}`)
     }
     return grid[x][y] = 'O';
   }
@@ -124,11 +129,13 @@ function numberOfShips(grid) {
 }
 
 function checkShipStatus(grid) {
-  grid.forEach(elem => elem.forEach(elem => {
-    if (Number.isInteger(elem) == true) {
-      return true;
-    };
-  }))
+  for(let x = 0; x < grid.length; x++) {
+    for(let y = 0; y < grid[x].length; y++) {
+      if (grid[x][y] > 0) {
+        return true;
+      }
+    }
+  }
 }
 
 function gameStart(grid, size) {
@@ -140,21 +147,18 @@ function gameStart(grid, size) {
   createShip(grid, gridArr, size, 4, 4);
   createShip(grid, gridArr, size, 5, 5);
   printGrid(grid);
-  console.log(grid);
-  console.log(gridArr);
   while (checkShipStatus(grid)) {
     const poke = attack();
-    attackShip(grid, poke, numberOfShips(grid));
+    let shipNum = numberOfShips(grid)
+    attackShip(grid, poke, shipNum);
     printGrid(grid);
   }
 }
 
 rs.keyIn("Press any key to start the game.");
-let grid;
-gameStart(grid, 10);
-let restart = rs.keyInYN('You have destroyed all battleships. Would you like to play again? Y/N')
-
+let restart = true;
 while (restart) {
-  gameStart(grid);
+  let grid;
+  gameStart(grid, 10);
   restart = rs.keyInYN('You have destroyed all battleships. Would you like to play again? Y/N');
 }
