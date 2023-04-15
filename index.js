@@ -148,7 +148,7 @@ function enemyAttackShip(grid, shipNum) {
     console.log(`Enemy attacked ${enemyHit} and missed! Your remaining ships: ${shipNum}`)
     return grid[x][y] = 'X';
   } else {
-    grid[x][y] == 'O';
+    grid[x][y] = 'O';
     let currentShips = numberOfShips(grid);
     if (shipNum == currentShips) {
       console.log(`Enemy hit ${enemyHit}! Your remaining ships: ${shipNum}`)
@@ -177,6 +177,7 @@ function checkShipStatus(grid) {
       }
     }
   }
+  return false
 }
 
 function gameStart(size) {
@@ -194,21 +195,31 @@ function gameStart(size) {
   createShip(enemyGrid, enemyGridArr, size, 3, 3);
   createShip(enemyGrid, enemyGridArr, size, 4, 4);
   createShip(enemyGrid, enemyGridArr, size, 5, 5);
-  printGrid(grid, false);
   printGrid(enemyGrid, true);
+  printGrid(grid, false);
   while (checkShipStatus(grid) && checkShipStatus(enemyGrid)) {
-    let shipNum = numberOfShips(grid);
-    let enemyShipNum = numberOfShips(enemyGrid);
-    attackShip(enemyGrid, attack(), enemyShipNum);
+    const shipNum = numberOfShips(grid);
+    const enemyShipNum = numberOfShips(enemyGrid);
+    const poke = attack();
+    attackShip(enemyGrid, poke, enemyShipNum);
     printGrid(enemyGrid, true);
     enemyAttackShip(grid, shipNum);
     printGrid(grid, false);
+  }
+  if (!checkShipStatus(grid)) {
+    return false;
+  } else {
+    return true;
   }
 }
 
 rs.keyIn("Press any key to start the game.");
 let restart = true;
 while (restart) {
-  gameStart(10);
-  restart = rs.keyInYN('You have destroyed all battleships. Would you like to play again? Y/N');
+  const state = gameStart(10);
+  if (!state) {
+    restart = rs.keyInYN('All your battleships have been destroyed! Would you like to play again? Y/N')
+  } else {
+    restart = rs.keyInYN('You have destroyed all enemy battleships! Would you like to play again? Y/N');
+  }
 }
