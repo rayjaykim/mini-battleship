@@ -185,16 +185,12 @@ function gameStart(size) {
   let enemyGrid = createGrid(size);
   let gridArr = [];
   let enemyGridArr = [];
-  createShip(grid, gridArr, size, 2, 1);
-  createShip(grid, gridArr, size, 3, 2);
-  createShip(grid, gridArr, size, 3, 3);
-  createShip(grid, gridArr, size, 4, 4);
-  createShip(grid, gridArr, size, 5, 5);
-  createShip(enemyGrid, enemyGridArr, size, 2, 1);
-  createShip(enemyGrid, enemyGridArr, size, 3, 2);
-  createShip(enemyGrid, enemyGridArr, size, 3, 3);
-  createShip(enemyGrid, enemyGridArr, size, 4, 4);
-  createShip(enemyGrid, enemyGridArr, size, 5, 5);
+  [1, 2].map(arr => {
+    const val = arr === 1 ? [grid, gridArr] : [enemyGrid, enemyGridArr];
+    [2, 3, 3, 4, 5].map((item, index) => {
+      createShip(val[0], val[1], size, item, index + 1);
+    });
+  })
   printGrid(enemyGrid, true);
   printGrid(grid, false);
   while (checkShipStatus(grid) && checkShipStatus(enemyGrid)) {
@@ -217,9 +213,8 @@ rs.keyIn("Press any key to start the game.");
 let restart = true;
 while (restart) {
   const state = gameStart(10);
-  if (!state) {
-    restart = rs.keyInYN('All your battleships have been destroyed! Would you like to play again? Y/N')
-  } else {
-    restart = rs.keyInYN('You have destroyed all enemy battleships! Would you like to play again? Y/N');
-  }
+  const message = !state 
+    ? 'All your battleships have been destroyed! Would you like to play again? Y/N'
+    : 'You have destroyed all enemy battleships! Would you like to play again? Y/N'
+  restart = rs.keyInYN(message);
 }
